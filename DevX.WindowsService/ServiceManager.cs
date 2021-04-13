@@ -51,7 +51,7 @@ namespace DevX.WindowsService
                 null);
             if (enumerated)
             {
-                return new Service[0];
+                return Array.Empty<Service>();
             }
             else
             {
@@ -112,7 +112,7 @@ namespace DevX.WindowsService
                 out _);
             if (enumerated)
             {
-                return new Service[0];
+                return Array.Empty<Service>();
             }
             else
             {
