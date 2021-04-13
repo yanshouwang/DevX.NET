@@ -1,6 +1,6 @@
-﻿using DevX.Core.Win32;
+﻿using DevX.WindowsService.WinAPI;
 
-namespace DevX.Core
+namespace DevX.WindowsService
 {
     public class Service
     {

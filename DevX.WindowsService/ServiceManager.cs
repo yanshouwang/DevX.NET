@@ -1,9 +1,9 @@
-﻿using DevX.Core.Win32;
+﻿using DevX.WindowsService.WinAPI;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-namespace DevX.Core
+namespace DevX.WindowsService
 {
     public class ServiceManager : IDisposable
     {
@@ -51,7 +51,7 @@ namespace DevX.Core
                 null);
             if (enumerated)
             {
-                return Array.Empty<Service>();
+                return new Service[0];
             }
             else
             {
@@ -112,7 +112,7 @@ namespace DevX.Core
                 out _);
             if (enumerated)
             {
-                return Array.Empty<Service>();
+                return new Service[0];
             }
             else
             {
@@ -152,14 +152,11 @@ namespace DevX.Core
             }
         }
 
-        public Service Create(string name, string displayName, StartMode startMode, string binaryPath)
+        public Service Create(string name, string displayName, bool automatic, string binaryPath)
         {
-            var startType = startMode switch
-            {
-                StartMode.Automatic => SERVICE_START_TYPE.SERVICE_AUTO_START,
-                StartMode.Manual => SERVICE_START_TYPE.SERVICE_DEMAND_START,
-                _ => throw new ArgumentException("Invalid start mode.", nameof(startMode)),
-            };
+            var startType = automatic
+                ? SERVICE_START_TYPE.SERVICE_AUTO_START
+                : SERVICE_START_TYPE.SERVICE_DEMAND_START;
             var servicePtr = Advapi32.CreateService(
                 _managerPtr, name, displayName,
                 SERVICE_ACCESS.SERVICE_ALL_ACCESS,
@@ -205,86 +202,14 @@ namespace DevX.Core
 
         public void Start(Service service, string[] args)
         {
-            args ??= Array.Empty<string>();
             var servicePtr = Advapi32.OpenService(_managerPtr, service.Name, SERVICE_ACCESS.SERVICE_START);
             if (servicePtr == IntPtr.Zero)
             {
                 var error = Marshal.GetLastWin32Error();
                 throw new Win32Exception(error);
             }
-
-            //var argPtrs = new IntPtr[args.Length];
-            //var i = 0;
-            //try
-            //{
-            //    for (i = 0; i < args.Length; i++)
-            //    {
-            //        if (args[i] == null)
-            //        {
-            //            var message = "Arguments within the 'args' array passed to Start cannot be null.";
-            //            throw new ArgumentNullException($"{nameof(args)}[{i}]", message);
-            //        }
-            //        argPtrs[i] = Marshal.StringToHGlobalUni(args[i]);
-            //    }
-            //}
-            //catch (Exception ex1)
-            //{
-            //    for (int j = 0; j < i; j++)
-            //    {
-            //        Marshal.FreeHGlobal(argPtrs[i]);
-            //    }
-            //    var innerClosed = Advapi32.CloseServiceHandle(servicePtr);
-            //    if (innerClosed)
-            //    {
-            //        throw;
-            //    }
-            //    else
-            //    {
-            //        var error = Marshal.GetLastWin32Error();
-            //        var ex2 = new Win32Exception(error);
-            //        throw new AggregateException(ex1, ex2);
-            //    }
-            //}
-
-            //var argPtrsHandle = default(GCHandle);
-            //IntPtr argsPtr;
-            //try
-            //{
-            //    argPtrsHandle = GCHandle.Alloc(argPtrs, GCHandleType.Pinned);
-            //    argsPtr = argPtrsHandle.AddrOfPinnedObject();
-            //}
-            //catch (Exception ex1)
-            //{
-            //    for (i = 0; i < args.Length; i++)
-            //    {
-            //        Marshal.FreeHGlobal(argPtrs[i]);
-            //    }
-            //    if (argPtrsHandle.IsAllocated)
-            //    {
-            //        argPtrsHandle.Free();
-            //    }
-            //    var innerClosed = Advapi32.CloseServiceHandle(servicePtr);
-            //    if (innerClosed)
-            //    {
-            //        throw;
-            //    }
-            //    else
-            //    {
-            //        var error = Marshal.GetLastWin32Error();
-            //        var ex2 = new Win32Exception(error);
-            //        throw new AggregateException(ex1, ex2);
-            //    }
-            //}
-
             var started = Advapi32.StartService(servicePtr, args.Length, args);
             var closed = Advapi32.CloseServiceHandle(servicePtr);
-
-            //for (i = 0; i < args.Length; i++)
-            //{
-            //    Marshal.FreeHGlobal(argPtrs[i]);
-            //}
-            //argPtrsHandle.Free();
-
             if (!started || !closed)
             {
                 var error = Marshal.GetLastWin32Error();
