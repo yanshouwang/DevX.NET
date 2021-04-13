@@ -1,4 +1,4 @@
-﻿using DevX.WindowsService.WinAPI;
+﻿using DevX.WindowsService.Win32;
 
 namespace DevX.WindowsService
 {

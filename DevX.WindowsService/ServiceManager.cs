@@ -1,4 +1,4 @@
-﻿using DevX.WindowsService.WinAPI;
+﻿using DevX.WindowsService.Win32;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -25,7 +25,7 @@ namespace DevX.WindowsService
                 var paramName = nameof(machineName);
                 throw new ArgumentException(message, paramName);
             }
-            _managerPtr = Advapi32.OpenSCManager(machineName, null, SC_MANAGER_ACCESS.SC_MANAGER_ALL_ACCESS);
+            _managerPtr = ADVANCED_API.OpenSCManager(machineName, null, SC_MANAGER_ACCESS.SC_MANAGER_ALL_ACCESS);
             if (_managerPtr == IntPtr.Zero)
             {
                 var error = Marshal.GetLastWin32Error();
@@ -39,7 +39,7 @@ namespace DevX.WindowsService
                 SERVICE_TYPE.SERVICE_WIN32_OWN_PROCESS |
                 SERVICE_TYPE.SERVICE_WIN32_SHARE_PROCESS;
             var resumeHandle = 0;
-            var enumerated = Advapi32.EnumServicesStatusEx(
+            var enumerated = ADVANCED_API.EnumServicesStatusEx(
                 _managerPtr,
                 INFO_LEVEL.PROCESS_INFO,
                 serviceType,
@@ -64,7 +64,7 @@ namespace DevX.WindowsService
             var memoryPtr = Marshal.AllocHGlobal(bytesNeeded);
             try
             {
-                enumerated = Advapi32.EnumServicesStatusEx(
+                enumerated = ADVANCED_API.EnumServicesStatusEx(
                     _managerPtr,
                     INFO_LEVEL.PROCESS_INFO,
                     serviceType,
@@ -97,14 +97,14 @@ namespace DevX.WindowsService
 
         public Service[] GetDependentServices(Service service)
         {
-            var servicePtr = Advapi32.OpenService(
+            var servicePtr = ADVANCED_API.OpenService(
                 _managerPtr, service.Name, SERVICE_ACCESS.SERVICE_ENUMERATE_DEPENDENTS);
             if (servicePtr == IntPtr.Zero)
             {
                 var error = Marshal.GetLastWin32Error();
                 throw new Win32Exception(error);
             }
-            var enumerated = Advapi32.EnumDependentServices(
+            var enumerated = ADVANCED_API.EnumDependentServices(
                 servicePtr,
                 SERVICE_ACTIVE_STATE.SERVICE_STATE_ALL,
                 IntPtr.Zero, 0,
@@ -125,7 +125,7 @@ namespace DevX.WindowsService
             var memoryPtr = Marshal.AllocHGlobal(bytesNeeded);
             try
             {
-                enumerated = Advapi32.EnumDependentServices(
+                enumerated = ADVANCED_API.EnumDependentServices(
                     servicePtr,
                     SERVICE_ACTIVE_STATE.SERVICE_STATE_ALL,
                     memoryPtr, bytesNeeded,
@@ -157,7 +157,7 @@ namespace DevX.WindowsService
             var startType = automatic
                 ? SERVICE_START_TYPE.SERVICE_AUTO_START
                 : SERVICE_START_TYPE.SERVICE_DEMAND_START;
-            var servicePtr = Advapi32.CreateService(
+            var servicePtr = ADVANCED_API.CreateService(
                 _managerPtr, name, displayName,
                 SERVICE_ACCESS.SERVICE_ALL_ACCESS,
                 SERVICE_TYPE.SERVICE_WIN32_OWN_PROCESS, startType,
@@ -168,8 +168,8 @@ namespace DevX.WindowsService
                 var error = Marshal.GetLastWin32Error();
                 throw new Win32Exception(error);
             }
-            var quried = Advapi32.QueryServiceStatus(servicePtr, out var status);
-            var closed = Advapi32.CloseServiceHandle(servicePtr);
+            var quried = ADVANCED_API.QueryServiceStatus(servicePtr, out var status);
+            var closed = ADVANCED_API.CloseServiceHandle(servicePtr);
             if (!quried || !closed)
             {
                 var error = Marshal.GetLastWin32Error();
@@ -180,14 +180,14 @@ namespace DevX.WindowsService
 
         public void Delete(Service service)
         {
-            var servicePtr = Advapi32.OpenService(_managerPtr, service.Name, SERVICE_ACCESS.DELETE);
+            var servicePtr = ADVANCED_API.OpenService(_managerPtr, service.Name, SERVICE_ACCESS.DELETE);
             if (servicePtr == IntPtr.Zero)
             {
                 var error = Marshal.GetLastWin32Error();
                 throw new Win32Exception(error);
             }
-            var deleted = Advapi32.DeleteService(servicePtr);
-            var closed = Advapi32.CloseServiceHandle(servicePtr);
+            var deleted = ADVANCED_API.DeleteService(servicePtr);
+            var closed = ADVANCED_API.CloseServiceHandle(servicePtr);
             if (!deleted || !closed)
             {
                 var error = Marshal.GetLastWin32Error();
@@ -202,14 +202,14 @@ namespace DevX.WindowsService
 
         public void Start(Service service, string[] args)
         {
-            var servicePtr = Advapi32.OpenService(_managerPtr, service.Name, SERVICE_ACCESS.SERVICE_START);
+            var servicePtr = ADVANCED_API.OpenService(_managerPtr, service.Name, SERVICE_ACCESS.SERVICE_START);
             if (servicePtr == IntPtr.Zero)
             {
                 var error = Marshal.GetLastWin32Error();
                 throw new Win32Exception(error);
             }
-            var started = Advapi32.StartService(servicePtr, args.Length, args);
-            var closed = Advapi32.CloseServiceHandle(servicePtr);
+            var started = ADVANCED_API.StartService(servicePtr, args.Length, args);
+            var closed = ADVANCED_API.CloseServiceHandle(servicePtr);
             if (!started || !closed)
             {
                 var error = Marshal.GetLastWin32Error();
@@ -219,7 +219,7 @@ namespace DevX.WindowsService
 
         public void Stop(Service service)
         {
-            var servicePtr = Advapi32.OpenService(_managerPtr, service.Name, SERVICE_ACCESS.SERVICE_STOP);
+            var servicePtr = ADVANCED_API.OpenService(_managerPtr, service.Name, SERVICE_ACCESS.SERVICE_STOP);
             if (servicePtr == IntPtr.Zero)
             {
                 var error = Marshal.GetLastWin32Error();
@@ -230,8 +230,8 @@ namespace DevX.WindowsService
             //var stopped = Advapi32.ControlService(servicePtr, SERVICE_CONTROL.SERVICE_CONTROL_STOP, statusPtr);
             //var status = Marshal.PtrToStructure<SERVICE_STATUS>(statusPtr);
             //Marshal.FreeHGlobal(statusPtr);
-            var stopped = Advapi32.ControlService(servicePtr, SERVICE_CONTROL.SERVICE_CONTROL_STOP, out _);
-            var closed = Advapi32.CloseServiceHandle(servicePtr);
+            var stopped = ADVANCED_API.ControlService(servicePtr, SERVICE_CONTROL.SERVICE_CONTROL_STOP, out _);
+            var closed = ADVANCED_API.CloseServiceHandle(servicePtr);
             if (!stopped || !closed)
             {
                 var error = Marshal.GetLastWin32Error();
@@ -250,7 +250,7 @@ namespace DevX.WindowsService
                 if (disposing)
                 {
                     // TODO: 释放托管状态(托管对象)
-                    Advapi32.CloseServiceHandle(_managerPtr);
+                    ADVANCED_API.CloseServiceHandle(_managerPtr);
                 }
 
                 // TODO: 释放未托管的资源(未托管的对象)并替代终结器
