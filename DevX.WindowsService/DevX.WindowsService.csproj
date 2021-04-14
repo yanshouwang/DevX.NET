@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.1;net5.0-windows</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard2.1;net5.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageLicenseFile>README.md</PackageLicenseFile>
     <Copyright>Copyright © DevX 2021</Copyright>
@@ -10,17 +10,11 @@
     <Authors>DevX</Authors>
     <PackageProjectUrl>https://github.com/yanshouwang/DevX.NET</PackageProjectUrl>
     <RepositoryUrl>https://github.com/yanshouwang/DevX.NET</RepositoryUrl>
-    <RepositoryType></RepositoryType>
+    <RepositoryType>Git</RepositoryType>
     <PackageReleaseNotes>- Add Multi TargetFrameworks with new MSBuild</PackageReleaseNotes>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageTags>DevX WindowsService</PackageTags>
     <Version>1.0.1</Version>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
-    <DocumentationFile></DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
